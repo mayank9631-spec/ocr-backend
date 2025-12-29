@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from PyPDF2 import PdfReader, PdfWriter
 import os, uuid
 from pdf2image import convert_from_path
 import pytesseract
@@ -9,37 +10,16 @@ import numpy as np
 from docx import Document
 
 app = FastAPI()
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
-
+# Create uploads folder
 UPLOADS = "uploads"
 os.makedirs(UPLOADS, exist_ok=True)
 
-@app.post("/convert")from PyPDF2 import PdfReader, PdfWriter
+# Mount static folder to serve index.html
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
-@app.post("/edit")
-async def edit_pdf(file: UploadFile = File(...), page_number: int = 0, new_text: str = ""):
-    pdf_path = f"{UPLOADS}/{uuid.uuid4()}.pdf"
-    with open(pdf_path, "wb") as f:
-        f.write(await file.read())
-
-    reader = PdfReader(pdf_path)
-    writer = PdfWriter()
-
-    for i, page in enumerate(reader.pages):
-        if i == page_number and new_text:
-            # This is a simple way: we overwrite the page text completely
-            page_text = page.extract_text()
-            page_text = new_text  # Replace with new text
-            # PyPDF2 cannot directly write text, we just overwrite page content in advanced version
-        writer.add_page(page)
-
-    output_path = f"{UPLOADS}/{uuid.uuid4()}_edited.pdf"
-    with open(output_path, "wb") as f:
-        writer.write(f)
-
-    return FileResponse(output_path, filename="edited.pdf")
-
+# PDF -> Word OCR endpoint
+@app.post("/convert")
 async def convert(file: UploadFile = File(...)):
     pdf_path = f"{UPLOADS}/{uuid.uuid4()}.pdf"
     with open(pdf_path, "wb") as f:
@@ -63,6 +43,26 @@ async def convert(file: UploadFile = File(...)):
     doc.save(output)
 
     return FileResponse(output, filename="output.docx")
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=10000)
+
+# Edit PDF endpoint
+@app.post("/edit")
+async def edit_pdf(file: UploadFile = File(...), page_number: int = 0, new_text: str = ""):
+    pdf_path = f"{UPLOADS}/{uuid.uuid4()}.pdf"
+    with open(pdf_path, "wb") as f:
+        f.write(await file.read())
+
+    reader = PdfReader(pdf_path)
+    writer = PdfWriter()
+
+    for i, page in enumerate(reader.pages):
+        if i == page_number and new_text:
+            # NOTE: Simple overwrite, for advanced editing use other libraries
+            # PyPDF2 cannot directly write text; this is placeholder logic
+            pass
+        writer.add_page(page)
+
+    output_path = f"{UPLOADS}/{uuid.uuid4()}_edited.pdf"
+    with open(output_path, "wb") as f:
+        writer.write(f)
+
+    return FileResponse(output_path, filename="edited.pdf")
