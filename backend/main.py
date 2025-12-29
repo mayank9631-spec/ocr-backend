@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 import os, uuid
 from pdf2image import convert_from_path
 import pytesseract
@@ -8,6 +9,8 @@ import numpy as np
 from docx import Document
 
 app = FastAPI()
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
 
 UPLOADS = "uploads"
 os.makedirs(UPLOADS, exist_ok=True)
