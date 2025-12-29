@@ -7,3 +7,4 @@ python-docx
 pillow
 numpy
 python-multipart
+PyPDF2
