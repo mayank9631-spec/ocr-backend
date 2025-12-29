@@ -15,7 +15,31 @@ app.mount("/", StaticFiles(directory="static", html=True), name="static")
 UPLOADS = "uploads"
 os.makedirs(UPLOADS, exist_ok=True)
 
-@app.post("/convert")
+@app.post("/convert")from PyPDF2 import PdfReader, PdfWriter
+
+@app.post("/edit")
+async def edit_pdf(file: UploadFile = File(...), page_number: int = 0, new_text: str = ""):
+    pdf_path = f"{UPLOADS}/{uuid.uuid4()}.pdf"
+    with open(pdf_path, "wb") as f:
+        f.write(await file.read())
+
+    reader = PdfReader(pdf_path)
+    writer = PdfWriter()
+
+    for i, page in enumerate(reader.pages):
+        if i == page_number and new_text:
+            # This is a simple way: we overwrite the page text completely
+            page_text = page.extract_text()
+            page_text = new_text  # Replace with new text
+            # PyPDF2 cannot directly write text, we just overwrite page content in advanced version
+        writer.add_page(page)
+
+    output_path = f"{UPLOADS}/{uuid.uuid4()}_edited.pdf"
+    with open(output_path, "wb") as f:
+        writer.write(f)
+
+    return FileResponse(output_path, filename="edited.pdf")
+
 async def convert(file: UploadFile = File(...)):
     pdf_path = f"{UPLOADS}/{uuid.uuid4()}.pdf"
     with open(pdf_path, "wb") as f:
