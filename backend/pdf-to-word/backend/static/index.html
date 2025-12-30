@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PDF to Word Converter</title>
+</head>
+<body>
+  <h2>Convert PDF to Word (OCR)</h2>
+
+  <input type="file" id="file" accept="application/pdf">
+  <button onclick="convert()">Convert</button>
+
+  <script>
+    async function convert() {
+      const file = document.getElementById("file").files[0];
+      if (!file) {
+        alert("Please select a PDF file");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/convert", {
+        method: "POST",
+        body: formData
+      });
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "output.docx";
+      a.click();
+    }
+  </script>
+</body>
+</html>
