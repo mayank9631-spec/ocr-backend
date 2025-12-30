@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>PDF to Word Converter & Edit PDF</title>
+  <title>PDF to Word Converter</title>
 </head>
 <body>
   <h2>Convert PDF to Word (OCR)</h2>
-  <input type="file" id="file">
+
+  <input type="file" id="file" accept="application/pdf">
   <button onclick="convert()">Convert</button>
 
   <script>
@@ -19,66 +20,19 @@
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch(
-        "https://ocr-backend-ios2.onrender.com/convert",
-        {
-          method: "POST",
-          body: formData
-        }
-      );
+      const response = await fetch("/convert", {
+        method: "POST",
+        body: formData
+      });
 
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
 
       const a = document.createElement("a");
       a.href = url;
       a.download = "output.docx";
       a.click();
     }
-  </script>
-
-  <hr>
-
-  <h2>Edit PDF</h2>
-  <form id="editForm">
-    <input type="file" id="editFile" required><br><br>
-    <label>Page Number:</label>
-    <input type="number" id="pageNumber" value="0" min="0" required><br><br>
-    <label>New Text:</label>
-    <input type="text" id="newText" placeholder="Enter new text" required><br><br>
-    <button type="submit">Edit PDF</button>
-  </form>
-
-  <script>
-    document.getElementById('editForm').onsubmit = async function(e) {
-      e.preventDefault();
-      let fileInput = document.getElementById('editFile');
-      let pageNumber = document.getElementById('pageNumber').value;
-      let newText = document.getElementById('newText').value;
-
-      const formData = new FormData();
-      formData.append("file", fileInput.files[0]);
-      formData.append("page_number", pageNumber);
-      formData.append("new_text", newText);
-
-      const res = await fetch("https://ocr-backend-ios2.onrender.com/edit", {
-        method: "POST",
-        body: formData
-      });
-
-      if(res.ok){
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "edited.pdf";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      } else {
-        alert("Error editing PDF");
-      }
-    };
   </script>
 </body>
 </html>
